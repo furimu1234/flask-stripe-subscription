@@ -19,7 +19,7 @@ def index():
 
 @app.get("/create-checkout-session")
 def create_checkout_session():
-    domain_url = "http://localhost/"
+    domain_url = "http://192.168.128.115:5000/"
     
     checkout_session = stripe.checkout.Session.create(
         success_url=domain_url + "success?session_id={CHECKOUT_SESSION_ID}",
@@ -37,7 +37,15 @@ def create_checkout_session():
     return redirect(checkout_session.url)
     
 
+@app.get("/success")
+def success():
+    return render_template("success.html")
 
+
+@app.get("/cancel")
+def cancelled():
+    return render_template("cancel.html")
+    
     
 
 
