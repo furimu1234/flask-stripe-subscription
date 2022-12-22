@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect
+from flask import Flask, render_template, redirect, request
 import os
 from dotenv import load_dotenv
 import stripe
@@ -22,6 +22,7 @@ def index():
 def create_checkout_session():
     domain_url = "http://192.168.128.115:5000/"
 
+    # サブスクのセッションを作成する
     checkout_session = stripe.checkout.Session.create(
         success_url=domain_url + "success?session_id={CHECKOUT_SESSION_ID}",
         cancel_url=domain_url + "cancel",
@@ -34,7 +35,7 @@ def create_checkout_session():
             }
         ],
     )
-
+    # 取得したurlにリダイレクト
     return redirect(checkout_session.url)
 
 
@@ -46,6 +47,34 @@ def success():
 @app.get("/cancel")
 def cancelled():
     return render_template("cancel.html")
+
+
+@app.post("/webhook")
+def webhook():
+    # ヘッダー参考
+    # https://stripe.com/docs/api/events/types
+    signature = request.headers.get("stripe-signature")
+
+    event = stripe.Webhook.construct_event(
+        payload=request.data, sig_header=signature, secret=ENDPOINT_SECRET
+    )
+
+    # イベントタイプ参考
+    # https://stripe.com/docs/api/events/types
+    event_type = event["type"]
+
+    print(f"event: {event_type}")
+
+    # サブスク登録に成功した時
+    if event_type == "customer.subscription.created":
+        print("新規登録に成功しました")
+    # サブスクが更新された時
+    elif event_type == "customer.subscription.updated":
+        print("更新に成功しました。")
+    # サブスクがキャンセルされたとき
+    elif event_type == "customer.subscription.deleted":
+        print("サブスクをキャンセルしました。")
+    return redirect("/")
 
 
 if __name__ == "__main__":
