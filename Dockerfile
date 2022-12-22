@@ -15,7 +15,7 @@ RUN apt-get install less
 WORKDIR /project
 COPY ./requirements.txt /project
 
-ADD ./src src
+COPY ./src src
 
 RUN pip install -Ur requirements.txt
 
